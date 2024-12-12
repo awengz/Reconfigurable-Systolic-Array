@@ -11,6 +11,7 @@ Version: 1.0
 module PE # ( parameter int WDATA = 'd4 ) (
     input  logic clk,
     input  logic rst_n,
+	input  logic pe_enable,
     input  logic [WDATA-1:0] in_data_N,
     input  logic [WDATA-1:0] in_data_W,
     output logic [WDATA-1:0] out_data_S,
@@ -27,9 +28,11 @@ module PE # ( parameter int WDATA = 'd4 ) (
         end
 
         else begin
-            out_data_S <= in_data_N;
-            out_data_E <= in_data_W;
-            result <= result + in_data_N * in_data_W;
+			if (pe_enable) begin
+				out_data_S <= in_data_N;
+				out_data_E <= in_data_W;
+				result <= result + in_data_N * in_data_W;
+			end
         end
 
     end
