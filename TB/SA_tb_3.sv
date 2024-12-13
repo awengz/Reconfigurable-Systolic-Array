@@ -11,14 +11,14 @@ Version: 1.0
 module SA_tb_4;
 
     // Parameters Definition
-    parameter int N     = 'd4;
+    parameter int N     = 'd4; // Size of systolic array
     parameter int WDATA = 'd4;
 	parameter int K		= 'd3; // size of matrix, K is less than or equal to N
 
     // Variables
-    logic [WDATA-1:0]   matrix_A [1:N] [1:N];
-    logic [WDATA-1:0]   matrix_B [1:N] [1:N];
-    logic [2*WDATA-1:0] matrix_C [1:N] [1:N];
+    logic [WDATA-1:0]   matrix_A [1:K] [1:K];
+    logic [WDATA-1:0]   matrix_B [1:K] [1:K];
+    logic [2*WDATA-1:0] matrix_C [1:K] [1:K];
     int fail_cnt;
 
     // Interface Instantiation
@@ -52,9 +52,9 @@ module SA_tb_4;
     endtask: reset
 	
 	// Set Config
-	task set_cfg();
-		intf.row_cfg_in <= 'd3;
-		intf.col_cfg_in <= 'd3;
+	task set_cfg(int row, int col);
+		intf.row_cfg_in <= row;
+		intf.col_cfg_in <= col;
 		reset;
 		
 	endtask: set_cfg
@@ -62,9 +62,9 @@ module SA_tb_4;
     // Matrices Generation
     initial begin
 
-        for (int i = 'd1; i <= N; i++) begin
+        for (int i = 'd1; i <= K; i++) begin
 
-            for (int j = 'd1; j <= N; j++) begin
+            for (int j = 'd1; j <= K; j++) begin
 
                 matrix_A [i] [j] = $urandom_range ('d15, 'd1);
                 matrix_B [i] [j] = $urandom_range ('d15, 'd1);
@@ -74,11 +74,11 @@ module SA_tb_4;
 
         end
 
-        for (int i = 'd1; i <= N; i++) begin
+        for (int i = 'd1; i <= K; i++) begin
 
-            for (int j = 'd1; j <= N; j++) begin
+            for (int j = 'd1; j <= K; j++) begin
 
-                for (int k = 'd1; k <= N; k++) begin
+                for (int k = 'd1; k <= K; k++) begin
 
                     matrix_C [i] [j] += matrix_A [i] [k] * matrix_B [k] [j];
 
@@ -112,7 +112,11 @@ module SA_tb_4;
     initial begin
 
 		reset;
-		set_cfg;
+		set_cfg(K,K);
+		
+		
+		// for (1 to 2k)
+		//		drive ()
         
         // Cycle 1
 
@@ -131,25 +135,15 @@ module SA_tb_4;
 
         // Cycle 4
 
-        drive ( matrix_A [1] [4], matrix_A [2] [3], matrix_A [3] [2], matrix_A [4] [1],
-                matrix_B [4] [1], matrix_B [3] [2], matrix_B [2] [3], matrix_B [1] [4]);
+        drive ( 'd0, matrix_A [2] [3], matrix_A [3] [2], 'd0,
+                'd0, matrix_B [3] [2], matrix_B [2] [3], 'd0);
 
         // Cycle 5
 
-        drive ( 'd0, matrix_A [2] [4], matrix_A [3] [3], matrix_A [4] [2],
-                'd0, matrix_B [4] [2], matrix_B [3] [3], matrix_B [2] [4]);
+        drive ( 'd0, 'd0, matrix_A [3] [3], 'd0,
+                'd0, 'd0, matrix_B [3] [3], 'd0);
 
         // Cycle 6
-
-        drive ( 'd0, 'd0, matrix_A [3] [4], matrix_A [4] [3],
-                'd0, 'd0, matrix_B [4] [3], matrix_B [3] [4]);
-
-        // Cycle 7
-
-        drive ( 'd0, 'd0, 'd0, matrix_A [4] [4],
-                'd0, 'd0, 'd0, matrix_B [4] [4]);
-
-        // Cycle 8
 
         drive ( 'd0, 'd0, 'd0, 'd0,
                 'd0, 'd0, 'd0, 'd0);
@@ -158,9 +152,9 @@ module SA_tb_4;
 
         $display("Comparison Summary:\n");
 
-        for (int i = 'd1; i <= N; i++) begin
+        for (int i = 'd1; i <= K; i++) begin
 
-            for (int j = 'd1; j <= N; j++) begin
+            for (int j = 'd1; j <= K; j++) begin
 
                 if (matrix_C [i] [j] != intf.matrix_out [i] [j]) begin
                     $display("-------------------------------------------------------------------------------");
